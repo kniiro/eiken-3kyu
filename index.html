@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="3級面接">
+    <title>あきひろ君の英検3級 面接対策アプリ</title>
+    <style>
+        /* 📱 デザイン設定（お兄さん向けブルー基調） */
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+            background-color: #F0F4F8; /* 薄いブルーグレー */
+            margin: 0; padding: 0; color: #333;
+            overscroll-behavior-y: none;
+        }
+        .container {
+            max-width: 600px; margin: 0 auto; padding: 10px;
+            box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column;
+            padding-top: env(safe-area-inset-top, 15px); padding-bottom: env(safe-area-inset-bottom, 15px);
+        }
+        .hidden { display: none !important; }
+        
+        /* ヘッダー */
+        .header {
+            background-color: #2C3E50; color: white; padding: 15px; border-radius: 10px;
+            text-align: center; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .header h1 { margin: 0; font-size: 22px; letter-spacing: 1px;}
+
+        /* 面接カード (Passage & Illustration) */
+        .card-container {
+            background: #FFF; border: 2px solid #BDC3C7; border-radius: 10px; padding: 20px;
+            margin-bottom: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        .card-title { font-size: 20px; font-weight: bold; text-align: center; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #3498DB; padding-bottom: 10px;}
+        .passage { font-size: 18px; line-height: 1.6; text-align: left; margin-bottom: 20px;}
+        
+        /* イラスト表現エリア */
+        .illustration-area {
+            background: #E8F8F5; border: 2px dashed #1ABC9C; border-radius: 10px; padding: 15px;
+        }
+        .illustration-title { font-weight: bold; color: #16A085; margin-bottom: 10px; text-align: center;}
+        .people-grid { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;}
+        .person { text-align: center; background: #FFF; padding: 10px; border-radius: 8px; width: 30%; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+        .person-emoji { font-size: 40px; margin-bottom: 5px;}
+        .person-label { font-weight: bold; font-size: 14px; margin-bottom: 3px; color: #2980B9;}
+        .person-action { font-size: 12px; color: #555;}
+
+        /* 面接官の吹き出し */
+        .interviewer-area {
+            display: flex; align-items: flex-start; margin-bottom: 15px;
+        }
+        .interviewer-icon { font-size: 40px; margin-right: 15px;}
+        .interviewer-balloon {
+            background: #FFF; border: 2px solid #3498DB; border-radius: 15px; padding: 15px;
+            position: relative; flex: 1; font-size: 18px; font-weight: bold; color: #2C3E50;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .interviewer-balloon::before {
+            content: ''; position: absolute; top: 15px; left: -10px;
+            border-width: 10px 10px 10px 0; border-style: solid; border-color: transparent #3498DB transparent transparent;
+        }
+        .interviewer-balloon::after {
+            content: ''; position: absolute; top: 18px; left: -6px;
+            border-width: 7px 7px 7px 0; border-style: solid; border-color: transparent #FFF transparent transparent;
+        }
+
+        /* 選択肢ボタン */
+        .choices-area { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;}
+        .choice-btn {
+            background-color: #FFF; color: #333; border: 2px solid #BDC3C7; border-radius: 8px;
+            padding: 15px; font-size: 16px; text-align: left; cursor: pointer;
+            transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+        }
+        .choice-btn:active:not(:disabled) { background-color: #ECF0F1; transform: scale(0.98);}
+        .choice-btn:disabled { opacity: 0.8; cursor: default;}
+        .choice-btn.correct { background-color: #D4EFDF; border-color: #27AE60; color: #1E8449; font-weight: bold;}
+        .choice-btn.wrong { background-color: #FADBD8; border-color: #E74C3C; color: #C0392B;}
+
+        /* 解説エリア */
+        .explanation-box {
+            background: #FEF9E7; border: 2px solid #F1C40F; border-radius: 10px; padding: 15px; margin-top: 15px;
+            animation: fadeIn 0.4s ease-out; text-align: left;
+        }
+        .exp-title { color: #D35400; font-weight: bold; margin-top: 0; border-bottom: 1px dashed #D35400; padding-bottom: 5px;}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 一般ボタン */
+        .action-btn {
+            background-color: #3498DB; color: white; border: none; padding: 15px 20px;
+            font-size: 18px; font-weight: bold; border-radius: 10px; box-shadow: 0 4px #2980B9;
+            cursor: pointer; width: 100%; margin-top: 10px; -webkit-tap-highlight-color: transparent;
+        }
+        .action-btn:active { transform: translateY(4px); box-shadow: 0 0 #2980B9; }
+        
+        .timer-text { font-size: 24px; font-weight: bold; color: #E74C3C; text-align: center; margin: 10px 0;}
+
+        /* 音声読み上げボタン */
+        .read-aloud-btn {
+            background-color: #F39C12; color: #FFF; border: none; padding: 8px 15px;
+            font-size: 14px; font-weight: bold; border-radius: 6px; box-shadow: 0 3px #D68910;
+            cursor: pointer; display: inline-block; margin-bottom: 15px; -webkit-tap-highlight-color: transparent;
+        }
+        .read-aloud-btn:active { transform: translateY(3px); box-shadow: 0 0 #D68910; }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <!-- ヘッダー -->
+        <div class="header">
+            <h1>👨‍🎓 あきひろ君の英検3級 面接対策</h1>
+        </div>
+
+        <!-- 1. スタート画面 -->
+        <div id="start-screen">
+            <div class="card-container" style="text-align: center;">
+                <h2>Let's practice for the test!</h2>
+                <p>実際の面接と同じように、<br>パッセージの黙読と3つの質問が出題されます。<br>（全10パターンの問題がランダムで出ます）</p>
+                <div style="font-size: 60px; margin: 20px 0;">🗣️ 📝</div>
+                <button class="action-btn" onclick="startTest()">面接テストをスタート</button>
+            </div>
+        </div>
+
+        <!-- 2. 面接カード画面（スクロール領域） -->
+        <div id="card-screen" class="hidden">
+            <!-- 常に上に表示しておく面接官 -->
+            <div class="interviewer-area">
+                <div class="interviewer-icon">👨‍🏫</div>
+                <div class="interviewer-balloon" id="interviewer-msg">Please read the passage silently for 20 seconds.</div>
+            </div>
+            
+            <div id="reading-timer" class="timer-text hidden">20</div>
+
+            <!-- カード部分 -->
+            <div class="card-container" id="interview-card">
+                <h3 class="card-title" id="card-title">Title</h3>
+                <div style="text-align: center;">
+                    <button class="read-aloud-btn" onclick="playPassageAudio()">🔊 Passageを読み上げる</button>
+                </div>
+                <div class="passage" id="card-passage">Passage goes here...</div>
+                
+                <div class="illustration-area">
+                    <div class="illustration-title">▼ イラストの状況</div>
+                    <div class="people-grid" id="card-illustration">
+                        <!-- 人物生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 問題へ進むボタン（黙読後に表示） -->
+            <button id="btn-to-questions" class="action-btn hidden" onclick="startQuestions()">質問に答える</button>
+        </div>
+
+        <!-- 3. 問題画面 -->
+        <div id="question-screen" class="hidden">
+            <!-- 上部にカードを縮小表示（スクロールして確認できるようにする） -->
+            <details style="background: #FFF; border:1px solid #BDC3C7; border-radius:8px; padding: 10px; margin-bottom:15px;">
+                <summary style="font-weight:bold; cursor:pointer; color:#3498DB;">面接カードを見る (タップで開閉)</summary>
+                <div style="margin-top:10px;">
+                    <h4 style="margin:0 0 5px; text-align:center;" id="q-card-title"></h4>
+                    <div style="text-align: center;">
+                        <button class="read-aloud-btn" onclick="playPassageAudio()">🔊 Passageを読み上げる</button>
+                    </div>
+                    <p style="font-size:14px; margin:0 0 10px;" id="q-card-passage"></p>
+                    <div class="people-grid" id="q-card-illustration" style="transform: scale(0.9); transform-origin: top;"></div>
+                </div>
+            </details>
+
+            <div class="interviewer-area">
+                <div class="interviewer-icon">👨‍🏫</div>
+                <div class="interviewer-balloon">
+                    <span id="q-number" style="color:#E74C3C;">No. 1</span><br>
+                    <span id="q-text">Question text</span>
+                    <button onclick="playCurrentQuestionAudio()" style="display:block; margin-top:10px; padding:5px 10px; border-radius:5px; border:1px solid #ccc; background:#f9f9f9; cursor:pointer;">🔊 音声をもう一度聞く</button>
+                </div>
+            </div>
+
+            <div class="choices-area" id="choices-container"></div>
+
+            <div id="explanation-area" class="explanation-box hidden">
+                <p class="exp-title" id="exp-judge">正解 / 不正解</p>
+                <p style="margin:0; font-size:15px; line-height:1.5;" id="exp-text">解説テキスト</p>
+                <button class="action-btn" style="margin-top:15px;" onclick="nextQuestion()">次へ進む</button>
+            </div>
+        </div>
+
+        <!-- 4. 結果画面 -->
+        <div id="result-screen" class="hidden">
+            <div class="card-container" style="text-align: center;">
+                <h2>テスト終了！</h2>
+                <div style="font-size: 60px; margin: 10px 0;">🎉</div>
+                <h3 style="color: #E74C3C; font-size: 28px; margin: 10px 0;" id="result-score">3 / 3 正解</h3>
+                <p id="result-msg" style="font-weight:bold; font-size:18px; margin-bottom:20px;"></p>
+                
+                <div style="text-align:left; background:#F8F9F9; padding:15px; border-radius:8px; font-size:14px; color:#555;">
+                    <strong>💡 面接のアドバイス：</strong><br>
+                    ・わからなかった時は <b>"Could you repeat the question, please?"</b> とお願いしましょう。<br>
+                    ・アイコンタクトと大きな声が合格への近道です！
+                </div>
+
+                <button class="action-btn" style="margin-top:20px;" onclick="location.reload()">もう一度練習する</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ==============================================
+           データセット (英検3級 大問10パターン)
+        ============================================== */
+        const testCards = [
+            {
+                title: "Winter Sports",
+                passage: "Many people enjoy winter sports in cold weather. For example, skiing and snowboarding are very popular. Some people go to the mountains to enjoy these sports with their families and friends. By playing winter sports, they can stay healthy and have a good time.",
+                illustration: [
+                    { emoji: "⛷️", label: "A boy", action: "スキーをしている" },
+                    { emoji: "⛄️", label: "A girl", action: "雪だるまを作っている" },
+                    { emoji: "📸", label: "A father", action: "写真を撮ろうとしている" }
+                ],
+                questions: [
+                    {
+                        no: 1, qText: "According to the passage, how can people stay healthy and have a good time?",
+                        choices: ["By playing winter sports.", "By going to the mountains.", "By taking pictures.", "By enjoying cold weather."],
+                        correctIndex: 0, exp: "「How」で聞かれた場合、パッセージ内の「By 〜ing」を探します。最後の文「By playing winter sports, they can stay healthy and have a good time.」が答えです。"
+                    },
+                    {
+                        no: 2, qText: "Please look at the boy. What is he doing?",
+                        choices: ["He is skiing.", "He is making a snowman.", "He is taking a picture.", "He is snowboarding."],
+                        correctIndex: 0, exp: "男の子(A boy)はスキーをしています。「What is he doing?」と現在進行形で聞かれたので、「He is ~ing」の形で答えましょう。"
+                    },
+                    {
+                        no: 3, qText: "Please look at the father. What is he going to do?",
+                        choices: ["He is going to take a picture.", "He is going to ski.", "He is going to make a snowman.", "He is going to read a book."],
+                        correctIndex: 0, exp: "父親(A father)はカメラを持ってこれから写真を撮ろうとしています。「What is he going to do?」と未来を聞かれたので、「He is going to ~」の形で答えます。"
+                    }
+                ]
+            },
+            {
+                title: "Cleaning the Parks",
+                passage: "Parks are important places for people in towns and cities. Many people visit them to relax or play sports. However, some people leave their trash there. So, volunteers often clean the parks to make them beautiful again.",
+                illustration: [
+                    { emoji: "🗑️", label: "A boy", action: "ゴミを拾っている" },
+                    { emoji: "🌷", label: "A woman", action: "花に水をやっている" },
+                    { emoji: "📖", label: "A man", action: "ベンチで本を読もうとしている" }
+                ],
+                questions: [
+                    {
+                        no: 1, qText: "According to the passage, why do volunteers often clean the parks?",
+                        choices: ["To make them beautiful again.", "To play sports.", "To relax in the towns.", "To leave their trash there."],
+                        correctIndex: 0, exp: "「Why」で聞かれた場合、直前の文（So, ~や Because~）を確認します。最後の文「So, volunteers often clean the parks to make them beautiful again.」から、目的を表す「To make them beautiful again.」が正解です。"
+                    },
+                    {
+                        no: 2, qText: "Please look at the boy. What is he doing?",
+                        choices: ["He is picking up the trash.", "He is watering the flowers.", "He is reading a book.", "He is relaxing in the park."],
+                        correctIndex: 0, exp: "男の子(A boy)はゴミを拾っています。「pick up the trash(ゴミを拾う)」を現在進行形にして「He is picking up the trash.」と答えます。"
+                    },
+                    {
+                        no: 3, qText: "Please look at the man. What is he going to do?",
+                        choices: ["He is going to read a book.", "He is going to pick up the trash.", "He is going to water the flowers.", "He is going to clean the park."],
+                        correctIndex: 0, exp: "男性(A man)は本を読もうとしています。これからすることなので「He is going to read a book.」が正解です。"
+                    }
+                ]
+            },
+            {
+                title: "Library Rules",
+                passage: "Libraries are very useful for many people. People can read books and study in quiet rooms. To keep the libraries quiet, visitors must turn off their mobile phones. By following this rule, everyone can use the libraries comfortably.",
+                illustration: [
+                    { emoji: "📚", label: "A girl", action: "本を読んでいる" },
+                    { emoji: "📱", label: "A boy", action: "スマホの電源を切っている" },
+                    { emoji: "🪟", label: "A man", action: "窓を開けようとしている" }
+                ],
+                questions: [
+                    {
+                        no: 1, qText: "According to the passage, how can everyone use the libraries comfortably?",
+                        choices: ["By following this rule.", "By reading books.", "By keeping the libraries quiet.", "By studying in quiet rooms."],
+                        correctIndex: 0, exp: "最後の文「By following this rule, everyone can use the libraries comfortably.」から、答えは「By following this rule.（このルールに従うことによって）」となります。"
+                    },
+                    {
+                        no: 2, qText: "Please look at the boy. What is he doing?",
+                        choices: ["He is turning off his mobile phone.", "He is reading a book.", "He is opening the window.", "He is talking on the phone."],
+                        correctIndex: 0, exp: "男の子(A boy)はスマホの電源を切っています。「turn off (消す)」を使って「He is turning off his mobile phone.」と答えます。"
+                    },
+                    {
+                        no: 3, qText: "Please look at the man. What is he going to do?",
+                        choices: ["He is going to open the window.", "He is going to read a book.", "He is going to turn off his phone.", "He is going to study."],
+                        correctIndex: 0, exp: "男性(A man)は窓を開けようとしています。「He is going to open the window.」が正解です。"
+                    }
+                ]
+            },
+            {
+                title: "School Trips",
+                passage: "Many schools have school trips every year. Students can learn many things outside the classroom. They often go to museums or historical places. By visiting these places, students can understand their history better.",
+                illustration: [
+                    { emoji: "🚌", label: "A bus driver", action: "バスを運転している" },
+                    { emoji: "🎒", label: "A girl", action: "リュックを開けようとしている" },
+                    { emoji: "🗺️", label: "A teacher", action: "地図を見ている" }
+                ],
+                questions: [
+                    {
+                        no: 1, qText: "According to the passage, how can students understand their history better?",
+                        choices: ["By visiting these places.", "By going to museums.", "By riding a bus.", "By leaving the classroom."],
+                        correctIndex: 0, exp: "「How」の質問です。パッセージ内の「By visiting these places, students can understand their history better.」から、「By visiting these places.」が答えです。"
+                    },
+                    {
+                        no: 2, qText: "Please look at the bus driver. What is he doing?",
+                        choices: ["He is driving the bus.", "He is checking a map.", "He is opening his bag.", "He is cleaning the bus."],
+                        correctIndex: 0, exp: "バスの運転手(A bus driver)はバスを運転しています。「He is driving the bus.」と答えましょう。"
+                    },
+                    {
+                        no: 3, qText: "Please look at the girl. What is she going to do?",
+                        choices: ["She is going to open her bag.", "She is going to take a picture.", "She is going to get on the bus.", "She is going to read a map."],
+                        correctIndex: 0, exp: "女の子(A girl)はリュックを開けようとしています。これからすることなので「She is going to open her bag.」が正解です。"
+                    }
+                ]
+            },
+            {
+                title: "Learning Foreign Languages",
+                passage: "Today, many people want to learn foreign languages. English is the most popular language to learn. Some people listen to English radio programs every day. By doing this, they can improve their listening skills.",
+                illustration: [
+                    { emoji: "📻", label: "A woman", action: "ラジオを聞いている" },
+                    { emoji: "📝", label: "A boy", action: "ノートに書こうとしている" },
+                    { emoji: "🎧", label: "A man", action: "ヘッドホンをしている" }
+                ],
+                questions: [
+                    {
+                        no: 1, qText: "According to the passage, how can people improve their listening skills?",
+                        choices: ["By doing this.", "By speaking English every day.", "By watching movies.", "By reading books."],
+                        correctIndex: 0, exp: "最後の文「By doing this, they can improve their listening skills.」から、答えは「By doing this.」または「By listening to English radio programs.」となります。"
+                    },
+                    {
+                        no: 2, qText: "Please look at the woman. What is she doing?",
+                        choices: ["She is listening to the radio.", "She is writing in her notebook.", "She is putting on headphones.", "She is reading a book."],
+                        correctIndex: 0, exp: "女性(A woman)はラジオを聞いています。「listen to the radio」を進行形にして「She is listening to the radio.」と答えます。"
+                    },
+                    {
+                        no: 3, qText: "Please look at the boy. What is he going to do?",
+                        choices: ["He is going to write in his notebook.", "He is going to listen to the radio.", "He is going to study English.", "He is going to take off his headphones."],
+                        correctIndex: 0, exp: "男の子(A boy)はノートにペンで書こうとしています。「He is going to write in his notebook.」が正解です。"
+                    }
+                ]
+            },
+            {
+                title: "Using Bicycles",
+                passage: "Riding a bicycle is good for our health and the environment. Many people use bicycles to go to school or work. However, some people ride their bicycles too fast. So, police officers often teach people how to ride safely.",
+                illustration: [
+                    { emoji: "🚲", label: "A man", action: "自転車に乗っている" },
+                    { emoji: "👮", label: "A police officer", action: "人々に話をしている" },
+                    { emoji: "👦", label: "A boy", action: "ヘルメットをかぶろうとしている" }
+                ],
+                questions: [
+                    {
+                        no: 1, qText: "According to the passage, why do police officers often teach people how to ride safely?",
+                        choices: ["Because some people ride their bicycles too fast.", "Because riding a bicycle is good for our health.", "Because many people go to school.", "Because people need new bicycles."],
+                        correctIndex: 0, exp: "「Why」で聞かれたので理由を探します。直前の文「However, some people ride their bicycles too fast.（しかし、自転車に速く乗りすぎる人がいる）」が理由です。"
+                    },
+                    {
+                        no: 2, qText: "Please look at the man. What is he doing?",
+                        choices: ["He is riding a bicycle.", "He is walking to school.", "He is talking to the police officer.", "He is putting on a helmet."],
+                        correctIndex: 0, exp: "男性(A man)は自転車に乗っています。「ride a bicycle」を使って「He is riding a bicycle.」が正解です。"
+                    },
+                    {
+                        no: 3, qText: "Please look at the boy. What is he going to do?",
+                        choices: ["He is going to put on a helmet.", "He is going to buy a bicycle.", "He is going to talk to the man.", "He is going to ride his bicycle."],
+                        correctIndex: 0, exp: "男の子(A boy)はヘルメットをかぶろうとしています。「put on a helmet（ヘルメットをかぶる）」を未来形にして「He is going to put on a helmet.」となります。"
+                    }
+                ]
+            },
+            {
+                title: "Electronic Books",
+                passage: "Electronic books, or e-books, are becoming popular these days. People can read them on their smartphones or tablet computers. They are easy to carry around. So, many people read e-books on the train on their way to work.",
+                illustration: [
+                    { emoji: "📱", label: "A woman", action: "スマホを見ている" },
+                    { emoji: "🔌", label: "A man", action: "タブレットを充電しようとしている" },
+                    { emoji: "😴", label: "A girl", action: "寝ている" }
+                ],
+                questions: [
+                    {
+                        no: 1, qText: "According to the passage, why do many people read e-books on the train?",
+                        choices: ["Because they are easy to carry around.", "Because they are becoming popular.", "Because people use smartphones.", "Because they are going to work."],
+                        correctIndex: 0, exp: "最後の文が「So（だから）」で始まっているので、その直前の文「They are easy to carry around.（持ち運びが簡単だから）」が理由として正解です。"
+                    },
+                    {
+                        no: 2, qText: "Please look at the woman. What is she doing?",
+                        choices: ["She is looking at her smartphone.", "She is charging her tablet.", "She is sleeping on the train.", "She is buying an e-book."],
+                        correctIndex: 0, exp: "女性(A woman)はスマホを見ています。「look at（〜を見る）」を使って「She is looking at her smartphone.」と答えます。"
+                    },
+                    {
+                        no: 3, qText: "Please look at the man. What is he going to do?",
+                        choices: ["He is going to charge his tablet.", "He is going to read an e-book.", "He is going to buy a smartphone.", "He is going to sleep."],
+                        correctIndex: 0, exp: "男性(A man)はタブレットを充電しようとしています。「charge（充電する）」を使い、「He is going to charge his tablet.」が正解です。"
+                    }
+                ]
+            },
+            {
+                title: "Fast Food Restaurants",
+                passage: "Fast food restaurants are very popular among young people. They can eat delicious food quickly and cheaply. Sometimes these restaurants are very crowded. To save time, many people buy their food at the drive-through.",
+                illustration: [
+                    { emoji: "🍔", label: "A boy", action: "ハンバーガーを食べている" },
+                    { emoji: "🥤", label: "A girl", action: "ジュースを飲もうとしている" },
+                    { emoji: "🚗", label: "A man", action: "車を運転している" }
+                ],
+                questions: [
+                    {
+                        no: 1, qText: "According to the passage, why do many people buy their food at the drive-through?",
+                        choices: ["To save time.", "Because they are very popular.", "To eat delicious food.", "Because they are cheap."],
+                        correctIndex: 0, exp: "最後の文の冒頭「To save time, many people buy...」の部分です。理由は「To save time.（時間を節約するため）」です。"
+                    },
+                    {
+                        no: 2, qText: "Please look at the boy. What is he doing?",
+                        choices: ["He is eating a hamburger.", "He is buying food.", "He is drinking juice.", "He is driving a car."],
+                        correctIndex: 0, exp: "男の子(A boy)はハンバーガーを食べています。「He is eating a hamburger.」と現在進行形で答えます。"
+                    },
+                    {
+                        no: 3, qText: "Please look at the girl. What is she going to do?",
+                        choices: ["She is going to drink some juice.", "She is going to eat a hamburger.", "She is going to buy some fast food.", "She is going to go home."],
+                        correctIndex: 0, exp: "女の子(A girl)はジュースを飲もうとしています。「She is going to drink some juice.」が正解です。"
+                    }
+                ]
+            },
+            {
+                title: "Recycling",
+                passage: "Recycling is very important for our environment. Many people try to recycle plastic bottles and newspapers. Also, some supermarkets collect old clothes. By recycling these things, people can reduce the amount of garbage.",
+                illustration: [
+                    { emoji: "📰", label: "A man", action: "新聞を束ねている" },
+                    { emoji: "👕", label: "A woman", action: "古い服を持っていこうとしている" },
+                    { emoji: "♻️", label: "A boy", action: "ペットボトルを洗っている" }
+                ],
+                questions: [
+                    {
+                        no: 1, qText: "According to the passage, how can people reduce the amount of garbage?",
+                        choices: ["By recycling these things.", "By going to supermarkets.", "By buying plastic bottles.", "By wearing old clothes."],
+                        correctIndex: 0, exp: "「How」の質問です。最後の文「By recycling these things, people can reduce the amount of garbage.」から「By recycling these things.」が正解です。"
+                    },
+                    {
+                        no: 2, qText: "Please look at the boy. What is he doing?",
+                        choices: ["He is washing a plastic bottle.", "He is recycling newspapers.", "He is collecting old clothes.", "He is reducing garbage."],
+                        correctIndex: 0, exp: "男の子(A boy)はペットボトルを洗っています。「wash」の現在進行形を使って「He is washing a plastic bottle.」と答えます。"
+                    },
+                    {
+                        no: 3, qText: "Please look at the woman. What is she going to do?",
+                        choices: ["She is going to take her old clothes.", "She is going to buy a plastic bottle.", "She is going to wash her clothes.", "She is going to read a newspaper."],
+                        correctIndex: 0, exp: "女性(A woman)は古い服を持っていこうとしています。「take（持っていく）」を使って「She is going to take her old clothes.」となります。"
+                    }
+                ]
+            },
+            {
+                title: "Keeping Pets",
+                passage: "Many families in Japan keep pets. Dogs and cats are the most popular pets. Pets can make people happy and relaxed. However, keeping a pet takes a lot of time. So, people must take care of their pets every day.",
+                illustration: [
+                    { emoji: "🐕", label: "A girl", action: "犬と走っている" },
+                    { emoji: "🐈", label: "A boy", action: "猫にエサをやろうとしている" },
+                    { emoji: "🧹", label: "A father", action: "床を掃いている" }
+                ],
+                questions: [
+                    {
+                        no: 1, qText: "According to the passage, why must people take care of their pets every day?",
+                        choices: ["Because keeping a pet takes a lot of time.", "Because dogs and cats are popular.", "Because pets can make people happy.", "Because many families keep pets."],
+                        correctIndex: 0, exp: "「Why」に対して、直前の「However, keeping a pet takes a lot of time.（ペットを飼うのは多くの時間がかかるからです）」が理由になります。"
+                    },
+                    {
+                        no: 2, qText: "Please look at the girl. What is she doing?",
+                        choices: ["She is running with her dog.", "She is walking her dog.", "She is feeding her cat.", "She is sweeping the floor."],
+                        correctIndex: 0, exp: "女の子(A girl)は犬と一緒に走っています。「She is running with her dog.」が正解です。"
+                    },
+                    {
+                        no: 3, qText: "Please look at the boy. What is he going to do?",
+                        choices: ["He is going to feed his cat.", "He is going to walk his dog.", "He is going to sweep the floor.", "He is going to play with his dog."],
+                        correctIndex: 0, exp: "男の子(A boy)は猫にエサをやろうとしています。「feed（エサをやる）」を使って「He is going to feed his cat.」が正解です。"
+                    }
+                ]
+            }
+        ];
+
+        /* ==============================================
+           システム変数
+        ============================================== */
+        let currentCard = null;
+        let currentQIndex = 0;
+        let currentScore = 0;
+        let englishVoice = null;
+        let timerInterval = null;
+
+        // --- 音声設定 ---
+        function loadVoices() {
+            const v = speechSynthesis.getVoices();
+            englishVoice = v.find(x => x.lang === 'en-US' && (x.name.includes('Samantha') || x.name.includes('Alex'))) 
+                        || v.find(x => x.lang === 'en-US') 
+                        || v.find(x => x.lang.startsWith('en'));
+        }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+
+        function speakText(text) {
+            window.speechSynthesis.cancel(); // 前の音声をキャンセル
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'en-US';
+            if (!englishVoice) loadVoices();
+            if (englishVoice) u.voice = englishVoice;
+            u.rate = 0.85; // 少しゆっくりめ
+            window.speechSynthesis.speak(u);
+        }
+
+        // --- 画面操作 ---
+        function showScreen(id) {
+            ['start-screen', 'card-screen', 'question-screen', 'result-screen'].forEach(s => {
+                document.getElementById(s).classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        /* ==============================================
+           テストの流れ
+        ============================================== */
+        function startTest() {
+            // iOS音声再生ロック解除
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+            
+            currentScore = 0;
+            currentQIndex = 0;
+            // カードを全10問からランダムに選ぶ
+            currentCard = testCards[Math.floor(Math.random() * testCards.length)];
+            
+            renderCardData();
+            showScreen('card-screen');
+            
+            // 黙読の指示とタイマー
+            document.getElementById('interviewer-msg').innerText = "Here's your card. Please read the passage silently for 20 seconds.";
+            speakText("Here's your card. Please read the passage silently for 20 seconds.");
+            
+            let timeLeft = 20;
+            const timerEl = document.getElementById('reading-timer');
+            timerEl.classList.remove('hidden');
+            timerEl.innerText = `残り時間: ${timeLeft}秒`;
+            
+            document.getElementById('btn-to-questions').classList.add('hidden');
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.innerText = `残り時間: ${timeLeft}秒`;
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerEl.classList.add('hidden');
+                    document.getElementById('interviewer-msg').innerText = "All right. Please read it aloud. (今回は音読をスキップして問題に進みます)";
+                    speakText("All right. Now, I will ask you three questions.");
+                    document.getElementById('btn-to-questions').classList.remove('hidden');
+                }
+            }, 1000);
+        }
+
+        // カード情報の描画
+        function renderCardData() {
+            // メインカード
+            document.getElementById('card-title').innerText = currentCard.title;
+            document.getElementById('card-passage').innerText = currentCard.passage;
+            
+            // 質問画面用のミニカード
+            document.getElementById('q-card-title').innerText = currentCard.title;
+            document.getElementById('q-card-passage').innerText = currentCard.passage;
+
+            const makeIllustrationHTML = () => {
+                let html = '';
+                currentCard.illustration.forEach(p => {
+                    html += `
+                        <div class="person">
+                            <div class="person-emoji">${p.emoji}</div>
+                            <div class="person-label">${p.label}</div>
+                            <div class="person-action">${p.action}</div>
+                        </div>
+                    `;
+                });
+                return html;
+            };
+
+            document.getElementById('card-illustration').innerHTML = makeIllustrationHTML();
+            document.getElementById('q-card-illustration').innerHTML = makeIllustrationHTML();
+        }
+
+        // 問題画面へ移行
+        function startQuestions() {
+            if(timerInterval) clearInterval(timerInterval);
+            showScreen('question-screen');
+            setQuestion();
+        }
+
+        function setQuestion() {
+            const q = currentCard.questions[currentQIndex];
+            
+            document.getElementById('q-number').innerText = `No. ${q.no}`;
+            document.getElementById('q-text').innerText = q.qText;
+            
+            const container = document.getElementById('choices-container');
+            container.innerHTML = '';
+            
+            // ★ 選択肢をランダムにシャッフルする処理
+            const choicesWithFlags = q.choices.map((choiceText, index) => {
+                return { text: choiceText, isCorrect: index === q.correctIndex };
+            });
+            
+            // 配列の中身をシャッフル
+            for (let i = choicesWithFlags.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [choicesWithFlags[i], choicesWithFlags[j]] = [choicesWithFlags[j], choicesWithFlags[i]];
+            }
+            
+            // シャッフルされた選択肢をボタンとして画面に追加
+            choicesWithFlags.forEach((item) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.innerText = item.text;
+                btn.onclick = () => checkAnswer(item.isCorrect, btn, q);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('explanation-area').classList.add('hidden');
+            
+            // 音声読み上げ
+            let prefix = "";
+            if (q.no === 1) prefix = "Number 1. ";
+            if (q.no === 2) prefix = "Number 2. ";
+            if (q.no === 3) prefix = "Number 3. ";
+            speakText(prefix + q.qText);
+        }
+
+        function playCurrentQuestionAudio() {
+            const q = currentCard.questions[currentQIndex];
+            speakText(q.qText);
+        }
+
+        function playPassageAudio() {
+            if (currentCard && currentCard.passage) {
+                // 面接官の声と同じネイティブ音声(en-US)でPassageを読み上げます
+                speakText(currentCard.passage);
+            }
+        }
+
+        function checkAnswer(isCorrect, btn, qData) {
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons.forEach(b => b.disabled = true);
+            
+            if (isCorrect) {
+                currentScore++;
+                btn.classList.add('correct');
+                document.getElementById('exp-judge').innerText = "⭕️ 正解！ Great job!";
+                document.getElementById('exp-judge').style.color = "#27AE60";
+            } else {
+                btn.classList.add('wrong');
+                // 間違えた場合、どれが正解だったのか緑色にして教える
+                buttons.forEach(b => {
+                    if (b.innerText === qData.choices[qData.correctIndex]) {
+                        b.classList.add('correct');
+                    }
+                });
+                document.getElementById('exp-judge').innerText = "❌ おしい！";
+                document.getElementById('exp-judge').style.color = "#E74C3C";
+            }
+            
+            document.getElementById('exp-text').innerText = qData.exp;
+            document.getElementById('explanation-area').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQIndex++;
+            if (currentQIndex < currentCard.questions.length) {
+                setQuestion();
+            } else {
+                finishTest();
+            }
+        }
+
+        function finishTest() {
+            showScreen('result-screen');
+            document.getElementById('result-score').innerText = `${currentScore} / 3 正解`;
+            
+            const msgEl = document.getElementById('result-msg');
+            if (currentScore === 3) {
+                msgEl.innerText = "Excellent!! 完璧です！面接のコツをつかんでいますね！";
+                msgEl.style.color = "#27AE60";
+            } else if (currentScore === 2) {
+                msgEl.innerText = "Good job!! あと少しで完璧です！復習してみましょう。";
+                msgEl.style.color = "#D35400";
+            } else {
+                msgEl.innerText = "Nice try!! 解説を読んで、答えの探し方を覚えましょう！";
+                msgEl.style.color = "#2C3E50";
+            }
+            
+            speakText("This is the end of the test. You did a great job. Have a nice day!");
+        }
+
+        // 初期化時に音声をロード
+        window.onload = () => {
+            loadVoices();
+        };
+    </script>
+</body>
+</html>
